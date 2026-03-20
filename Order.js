@@ -1,4 +1,5 @@
 let currentState = welcoming;
+let order = {};
 
 export function handleInput(sInput) {
   return currentState(sInput);
@@ -6,28 +7,83 @@ export function handleInput(sInput) {
 
 export function clearInput(){
   currentState = welcoming;  
+  order = {};
 }
 
 function welcoming() {
   let aReturn = [];
-  currentState = reserving;
-  aReturn.push("Welcome to Rich's Acton Rapid Test.");
-  aReturn.push("Would you like to reserve a rapid test kit?");
+  currentState = choosingItem;
+  aReturn.push("Welcome to Vinnie's TakeOut!");
+  aReturn.push("What would you like? (ramen or quesadilla)");
   return aReturn;
 }
 
-function reserving(sInput) {
+function choosingItem(sInput) {
   let aReturn = [];
-  currentState = welcoming
-  if (sInput.toLowerCase().startsWith('y')) {
-    aReturn.push(`Your rapid test is reserved`);
-    let d = new Date();
-    d.setMinutes(d.getMinutes() + 120);
-    aReturn.push(`Please pick it up at 123 Tidy St., Acton before ${d.toTimeString()}`);
+
+  if (sInput.toLowerCase().includes("ramen") || sInput.toLowerCase().includes("quesadilla")) {
+    order.item = sInput;
+    currentState = choosingSize;
+    aReturn.push("What size would you like? (small, medium, large)");
   } else {
-    aReturn.push("Thanks for trying our reservation system");
-    aReturn.push("Maybe next time");
+    aReturn.push("Please choose ramen or quesadilla.");
   }
+
   return aReturn;
 }
 
+function choosingSize(sInput) {
+  let aReturn = [];
+  order.size = sInput;
+  currentState = choosingTopping;
+  aReturn.push("Choose a topping (corn, chicken, veggies)");
+  return aReturn;
+}
+
+function choosingTopping(sInput) {
+  let aReturn = [];
+  order.topping = sInput;
+  currentState = upsellDrink;
+  aReturn.push("Would you like a drink? (yes/no)");
+  return aReturn;
+}
+
+function upsellDrink(sInput) {
+  let aReturn = [];
+
+  if (sInput.toLowerCase().startsWith("y")) {
+    currentState = choosingDrink;
+    aReturn.push("What drink would you like? (pop, water, juice)");
+  } else {
+    currentState = finishOrder;
+    aReturn.push(...finishOrder());
+  }
+
+  return aReturn;
+}
+
+function choosingDrink(sInput) {
+  let aReturn = [];
+  order.drink = sInput;
+  currentState = finishOrder;
+  aReturn.push(...finishOrder());
+  return aReturn;
+}
+
+function finishOrder() {
+  let aReturn = [];
+
+  let summary = `${order.size} ${order.item} with ${order.topping}`;
+  if (order.drink) {
+    summary += ` and a ${order.drink}`;
+  }
+
+  aReturn.push("Order Summary:");
+  aReturn.push(summary);
+  aReturn.push("Thank you for your order!");
+
+  currentState = welcoming;
+  order = {};
+
+  return aReturn;
+}
